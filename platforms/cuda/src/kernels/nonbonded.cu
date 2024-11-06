@@ -101,7 +101,7 @@ __device__ void saveSingleForce(int atom, real3 force, unsigned long long* force
  * [in]interactingAtoms - a list of interactions within a given tile     
  *
  */
-extern "C" __global__ void computeNonbonded(
+extern "C" __global__ void computeNonbondedWithExclusions(
         unsigned long long* __restrict__ forceBuffers, mixed* __restrict__ energyBuffer, const real4* __restrict__ posq, const tileflags* __restrict__ exclusions,
         const int2* __restrict__ exclusionTiles, unsigned int startTileIndex, unsigned long long numTileIndices
 #ifdef USE_CUTOFF
@@ -264,8 +264,27 @@ extern "C" __global__ void computeNonbonded(
 #endif
     }
 
+}
+
+extern "C" __global__ void computeNonbondedWithoutExclusions(
+        unsigned long long* __restrict__ forceBuffers, mixed* __restrict__ energyBuffer, const real4* __restrict__ posq, const tileflags* __restrict__ exclusions,
+        const int2* __restrict__ exclusionTiles, unsigned int startTileIndex, unsigned long long numTileIndices
+#ifdef USE_CUTOFF
+        , const int* __restrict__ tiles, const unsigned int* __restrict__ interactionCount, real4 periodicBoxSize, real4 invPeriodicBoxSize, 
+        real4 periodicBoxVecX, real4 periodicBoxVecY, real4 periodicBoxVecZ, unsigned int maxTiles, const real4* __restrict__ blockCenter,
+        const real4* __restrict__ blockSize, const unsigned int* __restrict__ interactingAtoms, unsigned int maxSinglePairs,
+        const int2* __restrict__ singlePairs
+#endif
+        PARAMETER_ARGUMENTS) {
     // Second loop: tiles without exclusions, either from the neighbor list (with cutoff) or just enumerating all
     // of them (no cutoff).
+
+    const unsigned int totalWarps = (blockDim.x*gridDim.x)/TILE_SIZE;
+    const unsigned int warp = (blockIdx.x*blockDim.x+threadIdx.x)/TILE_SIZE; // global warpIndex
+    const unsigned int tgx = threadIdx.x & (TILE_SIZE-1); // index within the warp
+    const unsigned int tbx = threadIdx.x - tgx;           // block warpIndex
+    mixed energy = 0;
+    INIT_DERIVATIVES
 
 #ifdef USE_NEIGHBOR_LIST
     const unsigned int numTiles = interactionCount[0];
@@ -473,8 +492,26 @@ extern "C" __global__ void computeNonbonded(
         }
         pos++;
     }
-    
+}
+
+extern "C" __global__ void computeNonbondedSinglePairs(
+        unsigned long long* __restrict__ forceBuffers, mixed* __restrict__ energyBuffer, const real4* __restrict__ posq, const tileflags* __restrict__ exclusions,
+        const int2* __restrict__ exclusionTiles, unsigned int startTileIndex, unsigned long long numTileIndices
+#ifdef USE_CUTOFF
+        , const int* __restrict__ tiles, const unsigned int* __restrict__ interactionCount, real4 periodicBoxSize, real4 invPeriodicBoxSize, 
+        real4 periodicBoxVecX, real4 periodicBoxVecY, real4 periodicBoxVecZ, unsigned int maxTiles, const real4* __restrict__ blockCenter,
+        const real4* __restrict__ blockSize, const unsigned int* __restrict__ interactingAtoms, unsigned int maxSinglePairs,
+        const int2* __restrict__ singlePairs
+#endif
+        PARAMETER_ARGUMENTS) {
     // Third loop: single pairs that aren't part of a tile.
+
+    const unsigned int totalWarps = (blockDim.x*gridDim.x)/TILE_SIZE;
+    const unsigned int warp = (blockIdx.x*blockDim.x+threadIdx.x)/TILE_SIZE; // global warpIndex
+    const unsigned int tgx = threadIdx.x & (TILE_SIZE-1); // index within the warp
+    const unsigned int tbx = threadIdx.x - tgx;           // block warpIndex
+    mixed energy = 0;
+    INIT_DERIVATIVES
     
 #if USE_NEIGHBOR_LIST
     const unsigned int numPairs = interactionCount[1];

@@ -436,7 +436,7 @@ void CudaNonbondedUtilities::computeInteractions(int forceGroups, bool includeFo
         return;
     KernelSet& kernels = groupKernels[forceGroups];
     if (kernels.hasForces) {
-        CUfunction& kernel = (includeForces ? (includeEnergy ? kernels.forceEnergyKernel : kernels.forceKernel) : kernels.energyKernel);
+        CUfunctionFake& kernel = (includeForces ? (includeEnergy ? kernels.forceEnergyKernel : kernels.forceKernel) : kernels.energyKernel);
         if (kernel == NULL)
             kernel = createInteractionKernel(kernels.source, parameters, arguments, true, true, forceGroups, includeForces, includeEnergy);
         context.executeKernel(kernel, &forceArgs[0], numForceThreadBlocks*forceThreadBlockSize, forceThreadBlockSize);
@@ -547,7 +547,7 @@ void CudaNonbondedUtilities::createKernelsForGroups(int groups) {
     groupKernels[groups] = kernels;
 }
 
-CUfunction CudaNonbondedUtilities::createInteractionKernel(const string& source, vector<ParameterInfo>& params, vector<ParameterInfo>& arguments, bool useExclusions, bool isSymmetric, int groups, bool includeForces, bool includeEnergy) {
+CUfunctionFake CudaNonbondedUtilities::createInteractionKernel(const string& source, vector<ParameterInfo>& params, vector<ParameterInfo>& arguments, bool useExclusions, bool isSymmetric, int groups, bool includeForces, bool includeEnergy) {
     map<string, string> replacements;
     replacements["COMPUTE_INTERACTION"] = source;
     const string suffixes[] = {"x", "y", "z", "w"};
@@ -721,8 +721,16 @@ CUfunction CudaNonbondedUtilities::createInteractionKernel(const string& source,
     if ((localDataSize/4)%2 == 0 && !context.getUseDoublePrecision())
         defines["PARAMETER_SIZE_IS_EVEN"] = "1";
     CUmodule program = context.createModule(CudaKernelSources::vectorOps+context.replaceStrings(kernelSource, replacements), defines);
-    CUfunction kernel = context.getKernel(program, "computeNonbonded");
-    return kernel;
+    CUfunctionFake kernel1 = context.getKernel(program, "computeNonbondedWithExclusions");
+    CUfunctionFake kernel2 = context.getKernel(program, "computeNonbondedWithoutExclusions");
+    CUfunctionFake kernel3 = context.getKernel(program, "computeNonbondedSinglePairs");
+
+    CUfunctionFake aggregateKernel;
+    aggregateKernel.addFunction(kernel1);
+    aggregateKernel.addFunction(kernel2);
+    aggregateKernel.addFunction(kernel3);
+
+    return aggregateKernel;
 }
 
 void CudaNonbondedUtilities::setKernelSource(const string& source) {

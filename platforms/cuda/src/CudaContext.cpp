@@ -627,9 +627,9 @@ CUmodule CudaContext::createModule(const string source, const map<string, string
     }
 }
 
-CUfunction CudaContext::getKernel(CUmodule& module, const string& name) {
-    CUfunction function;
-    CUresult result = cuModuleGetFunction(&function, module, name.c_str());
+CUfunctionFake CudaContext::getKernel(CUmodule& module, const string& name) {
+    CUfunctionFake function;
+    CUresult result = cuModuleGetFunction(function.getPointerToPointer(), module, name.c_str());
     if (result != CUDA_SUCCESS) {
         std::stringstream m;
         m<<"Error creating kernel "<<name<<": "<<getErrorString(result)<<" ("<<result<<")";
@@ -693,15 +693,32 @@ std::string CudaContext::getErrorString(CUresult result) {
     return "CUDA error";
 }
 
-void CudaContext::executeKernel(CUfunction kernel, void** arguments, int threads, int blockSize, unsigned int sharedSize) {
+void CudaContext::executeKernel(CUfunctionFake kernel, void** arguments, int threads, int blockSize, unsigned int sharedSize) {
     if (blockSize == -1)
         blockSize = ThreadBlockSize;
     int gridSize = std::min((threads+blockSize-1)/blockSize, numThreadBlocks);
-    CUresult result = cuLaunchKernel(kernel, gridSize, 1, 1, blockSize, 1, 1, sharedSize, currentStream, arguments, NULL);
-    if (result != CUDA_SUCCESS) {
-        stringstream str;
-        str<<"Error invoking kernel: "<<getErrorString(result)<<" ("<<result<<")";
-        throw OpenMMException(str.str());
+
+    if (kernel.hasMultipleFunctions())
+    {
+        auto kernels = kernel.getFunctions();
+        for (auto kernel : kernels)
+        {
+            CUresult result = cuLaunchKernel(kernel, gridSize, 1, 1, blockSize, 1, 1, sharedSize, currentStream, arguments, NULL);
+            if (result != CUDA_SUCCESS) {
+                stringstream str;
+                str<<"Error invoking kernel: "<<getErrorString(result)<<" ("<<result<<")";
+                throw OpenMMException(str.str());
+            }
+        }
+    }
+    else
+    {
+        CUresult result = cuLaunchKernel(kernel, gridSize, 1, 1, blockSize, 1, 1, sharedSize, currentStream, arguments, NULL);
+        if (result != CUDA_SUCCESS) {
+            stringstream str;
+            str<<"Error invoking kernel: "<<getErrorString(result)<<" ("<<result<<")";
+            throw OpenMMException(str.str());
+        }
     }
 }
 

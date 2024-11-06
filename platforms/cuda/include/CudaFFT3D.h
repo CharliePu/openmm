@@ -1,6 +1,6 @@
 #ifndef __OPENMM_CUDAFFT3D_H__
 #define __OPENMM_CUDAFFT3D_H__
-
+#include "CudaFunctionFake.h"
 /* -------------------------------------------------------------------------- *
  *                                   OpenMM                                   *
  * -------------------------------------------------------------------------- *
@@ -86,14 +86,14 @@ public:
      */
     static int findLegalDimension(int minimum);
 private:
-    CUfunction createKernel(int xsize, int ysize, int zsize, int& threads, int axis, bool forward, bool inputIsReal);
+    CUfunctionFake createKernel(int xsize, int ysize, int zsize, int& threads, int axis, bool forward, bool inputIsReal);
     int xsize, ysize, zsize;
     int xthreads, ythreads, zthreads;
     bool packRealAsComplex;
     CudaContext& context;
-    CUfunction xkernel, ykernel, zkernel;
-    CUfunction invxkernel, invykernel, invzkernel;
-    CUfunction packForwardKernel, unpackForwardKernel, packBackwardKernel, unpackBackwardKernel;
+    CUfunctionFake xkernel, ykernel, zkernel;
+    CUfunctionFake invxkernel, invykernel, invzkernel;
+    CUfunctionFake packForwardKernel, unpackForwardKernel, packBackwardKernel, unpackBackwardKernel;
 };
 
 } // namespace OpenMM

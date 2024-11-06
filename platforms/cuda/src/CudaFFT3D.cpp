@@ -93,14 +93,14 @@ CudaFFT3D::CudaFFT3D(CudaContext& context, int xsize, int ysize, int zsize, bool
 }
 
 void CudaFFT3D::execFFT(CudaArray& in, CudaArray& out, bool forward) {
-    CUfunction kernel1 = (forward ? zkernel : invzkernel);
-    CUfunction kernel2 = (forward ? xkernel : invxkernel);
-    CUfunction kernel3 = (forward ? ykernel : invykernel);
+    CUfunctionFake kernel1 = (forward ? zkernel : invzkernel);
+    CUfunctionFake kernel2 = (forward ? xkernel : invxkernel);
+    CUfunctionFake kernel3 = (forward ? ykernel : invykernel);
     void* args1[] = {&in.getDevicePointer(), &out.getDevicePointer()};
     void* args2[] = {&out.getDevicePointer(), &in.getDevicePointer()};
     if (packRealAsComplex) {
-        CUfunction packKernel = (forward ? packForwardKernel : packBackwardKernel);
-        CUfunction unpackKernel = (forward ? unpackForwardKernel : unpackBackwardKernel);
+        CUfunctionFake packKernel = (forward ? packForwardKernel : packBackwardKernel);
+        CUfunctionFake unpackKernel = (forward ? unpackForwardKernel : unpackBackwardKernel);
         int gridSize = xsize*ysize*zsize/2;
 
         // Pack the data into a half sized grid.
@@ -168,7 +168,7 @@ static int getSmallestRadix(int size) {
     return minRadix;
 }
 
-CUfunction CudaFFT3D::createKernel(int xsize, int ysize, int zsize, int& threads, int axis, bool forward, bool inputIsReal) {
+CUfunctionFake CudaFFT3D::createKernel(int xsize, int ysize, int zsize, int& threads, int axis, bool forward, bool inputIsReal) {
     int maxThreads = (context.getUseDoublePrecision() ? 128 : 256);
 //    while (maxThreads > 128 && maxThreads-64 >= zsize)
 //        maxThreads -= 64;
@@ -345,7 +345,7 @@ CUfunction CudaFFT3D::createKernel(int xsize, int ysize, int zsize, int& threads
     replacements["INPUT_IS_PACKED"] = (inputIsReal && axis == 0 && !forward ? "1" : "0");
     replacements["OUTPUT_IS_PACKED"] = (outputIsPacked ? "1" : "0");
     CUmodule module = context.createModule(CudaKernelSources::vectorOps+context.replaceStrings(CudaKernelSources::fft, replacements));
-    CUfunction kernel = context.getKernel(module, "execFFT");
+    CUfunctionFake kernel = context.getKernel(module, "execFFT");
     threads = blocksPerGroup*threadsPerBlock;
     return kernel;
 }

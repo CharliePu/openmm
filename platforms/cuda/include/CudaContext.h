@@ -27,6 +27,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.      *
  * -------------------------------------------------------------------------- */
 
+#include "CudaFunctionFake.h"
 #include <map>
 #include <string>
 #include <utility>
@@ -293,7 +294,7 @@ public:
      * @param module    the module to get the kernel from
      * @param name      the name of the kernel to get
      */
-    CUfunction getKernel(CUmodule& module, const std::string& name);
+    CUfunctionFake getKernel(CUmodule& module, const std::string& name);
     /**
      * Execute a kernel.
      *
@@ -303,7 +304,7 @@ public:
      * @param blockSize    the size of each thread block to use
      * @param sharedSize   the amount of dynamic shared memory to allocated for the kernel, in bytes
      */
-    void executeKernel(CUfunction kernel, void** arguments, int workUnits, int blockSize = -1, unsigned int sharedSize = 0);
+    void executeKernel(CUfunctionFake kernel, void** arguments, int workUnits, int blockSize = -1, unsigned int sharedSize = 0);
     /**
      * Compute the largest thread block size that can be used for a kernel that requires a particular amount of
      * shared memory per thread.
@@ -578,14 +579,14 @@ private:
     CUcontext context;
     CUdevice device;
     CUstream currentStream;
-    CUfunction clearBufferKernel;
-    CUfunction clearTwoBuffersKernel;
-    CUfunction clearThreeBuffersKernel;
-    CUfunction clearFourBuffersKernel;
-    CUfunction clearFiveBuffersKernel;
-    CUfunction clearSixBuffersKernel;
-    CUfunction reduceEnergyKernel;
-    CUfunction setChargesKernel;
+    CUfunctionFake clearBufferKernel;
+    CUfunctionFake clearTwoBuffersKernel;
+    CUfunctionFake clearThreeBuffersKernel;
+    CUfunctionFake clearFourBuffersKernel;
+    CUfunctionFake clearFiveBuffersKernel;
+    CUfunctionFake clearSixBuffersKernel;
+    CUfunctionFake reduceEnergyKernel;
+    CUfunctionFake setChargesKernel;
     void* pinnedBuffer;
     CudaArray posq;
     CudaArray posqCorrection;

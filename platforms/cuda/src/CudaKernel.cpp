@@ -33,7 +33,7 @@
 using namespace OpenMM;
 using namespace std;
 
-CudaKernel::CudaKernel(CudaContext& context, CUfunction kernel, const string& name) : context(context), kernel(kernel), name(name) {
+CudaKernel::CudaKernel(CudaContext& context, CUfunctionFake kernel, const string& name) : context(context), kernel(kernel), name(name) {
 }
 
 string CudaKernel::getName() const {

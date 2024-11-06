@@ -120,7 +120,7 @@ private:
 
 class CudaCalcNonbondedForceKernel::PmeIO : public CalcPmeReciprocalForceKernel::IO {
 public:
-    PmeIO(CudaContext& cu, CUfunction addForcesKernel) : cu(cu), addForcesKernel(addForcesKernel) {
+    PmeIO(CudaContext& cu, CUfunctionFake addForcesKernel) : cu(cu), addForcesKernel(addForcesKernel) {
         forceTemp.initialize<float4>(cu, cu.getNumAtoms(), "PmeForce");
     }
     float* getPosq() {
@@ -137,7 +137,7 @@ private:
     CudaContext& cu;
     vector<float4> posq;
     CudaArray forceTemp;
-    CUfunction addForcesKernel;
+    CUfunctionFake addForcesKernel;
 };
 
 class CudaCalcNonbondedForceKernel::PmePreComputation : public CudaContext::ForcePreComputation {
@@ -185,7 +185,7 @@ private:
 
 class CudaCalcNonbondedForceKernel::SyncStreamPostComputation : public CudaContext::ForcePostComputation {
 public:
-    SyncStreamPostComputation(CudaContext& cu, CUevent event, CUfunction addEnergyKernel, CudaArray& pmeEnergyBuffer, int forceGroup) : cu(cu), event(event),
+    SyncStreamPostComputation(CudaContext& cu, CUevent event, CUfunctionFake addEnergyKernel, CudaArray& pmeEnergyBuffer, int forceGroup) : cu(cu), event(event),
             addEnergyKernel(addEnergyKernel), pmeEnergyBuffer(pmeEnergyBuffer), forceGroup(forceGroup) {
     }
     double computeForceAndEnergy(bool includeForces, bool includeEnergy, int groups) {
@@ -202,7 +202,7 @@ public:
 private:
     CudaContext& cu;
     CUevent event;
-    CUfunction addEnergyKernel;
+    CUfunctionFake addEnergyKernel;
     CudaArray& pmeEnergyBuffer;
     int forceGroup;
 };
@@ -441,7 +441,7 @@ void CudaCalcNonbondedForceKernel::initialize(const System& system, const Nonbon
                 try {
                     cpuPme = getPlatform().createKernel(CalcPmeReciprocalForceKernel::Name(), *cu.getPlatformData().context);
                     cpuPme.getAs<CalcPmeReciprocalForceKernel>().initialize(gridSizeX, gridSizeY, gridSizeZ, numParticles, alpha, cu.getPlatformData().deterministicForces);
-                    CUfunction addForcesKernel = cu.getKernel(module, "addForces");
+                    CUfunctionFake addForcesKernel = cu.getKernel(module, "addForces");
                     pmeio = new PmeIO(cu, addForcesKernel);
                     cu.addPreComputation(new PmePreComputation(cu, cpuPme, *pmeio));
                     cu.addPostComputation(new PmePostComputation(cpuPme, *pmeio));

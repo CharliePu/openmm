@@ -351,9 +351,9 @@ const string& Platform::getDefaultPluginsDirectory() {
 
 const string& Platform::getOpenMMVersion() {
 #if OPENMM_BUILD_VERSION == 0
-    static const string version = STRING(OPENMM_MAJOR_VERSION) "." STRING(OPENMM_MINOR_VERSION);
+    static const string version = STRING(OPENMM_MAJOR_VERSION) "." STRING(OPENMM_MINOR_VERSION) "_FISSION";
 #else
-    static const string version = STRING(OPENMM_MAJOR_VERSION) "." STRING(OPENMM_MINOR_VERSION) "." STRING(OPENMM_BUILD_VERSION);
+    static const string version = STRING(OPENMM_MAJOR_VERSION) "." STRING(OPENMM_MINOR_VERSION) "." STRING(OPENMM_BUILD_VERSION) "_FISSION";
 #endif
     return version;
 }

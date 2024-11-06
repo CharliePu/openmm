@@ -1,6 +1,6 @@
 #ifndef OPENMM_CUDANONBONDEDUTILITIES_H_
 #define OPENMM_CUDANONBONDEDUTILITIES_H_
-
+#include "CudaFunctionFake.h"
 /* -------------------------------------------------------------------------- *
  *                                   OpenMM                                   *
  * -------------------------------------------------------------------------- *
@@ -307,7 +307,7 @@ public:
      * @param includeForces whether this kernel should compute forces
      * @param includeEnergy whether this kernel should compute potential energy
      */
-    CUfunction createInteractionKernel(const std::string& source, std::vector<ParameterInfo>& params, std::vector<ParameterInfo>& arguments, bool useExclusions, bool isSymmetric, int groups, bool includeForces, bool includeEnergy);
+    CUfunctionFake createInteractionKernel(const std::string& source, std::vector<ParameterInfo>& params, std::vector<ParameterInfo>& arguments, bool useExclusions, bool isSymmetric, int groups, bool includeForces, bool includeEnergy);
     /**
      * Create the set of kernels that will be needed for a particular combination of force groups.
      * 
@@ -370,12 +370,12 @@ public:
     bool hasForces;
     double cutoffDistance;
     std::string source;
-    CUfunction forceKernel, energyKernel, forceEnergyKernel;
-    CUfunction findBlockBoundsKernel;
-    CUfunction computeSortKeysKernel;
-    CUfunction sortBoxDataKernel;
-    CUfunction findInteractingBlocksKernel;
-    CUfunction findInteractionsWithinBlocksKernel;
+    CUfunctionFake forceKernel, energyKernel, forceEnergyKernel;
+    CUfunctionFake findBlockBoundsKernel;
+    CUfunctionFake computeSortKeysKernel;
+    CUfunctionFake sortBoxDataKernel;
+    CUfunctionFake findInteractingBlocksKernel;
+    CUfunctionFake findInteractionsWithinBlocksKernel;
 };
 
 /**

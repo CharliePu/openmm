@@ -36,6 +36,7 @@
 #include "openmm/System.h"
 #include "openmm/common/CommonKernels.h"
 #include <cufft.h>
+#include "CudaFunctionFake.h"
 
 namespace OpenMM {
 
@@ -193,21 +194,21 @@ private:
     CudaFFT3D* dispersionFft;
     cufftHandle dispersionFftForward;
     cufftHandle dispersionFftBackward;
-    CUfunction computeParamsKernel, computeExclusionParamsKernel;
-    CUfunction ewaldSumsKernel;
-    CUfunction ewaldForcesKernel;
-    CUfunction pmeGridIndexKernel;
-    CUfunction pmeDispersionGridIndexKernel;
-    CUfunction pmeSpreadChargeKernel;
-    CUfunction pmeDispersionSpreadChargeKernel;
-    CUfunction pmeFinishSpreadChargeKernel;
-    CUfunction pmeDispersionFinishSpreadChargeKernel;
-    CUfunction pmeEvalEnergyKernel;
-    CUfunction pmeEvalDispersionEnergyKernel;
-    CUfunction pmeConvolutionKernel;
-    CUfunction pmeDispersionConvolutionKernel;
-    CUfunction pmeInterpolateForceKernel;
-    CUfunction pmeInterpolateDispersionForceKernel;
+    CUfunctionFake computeParamsKernel, computeExclusionParamsKernel;
+    CUfunctionFake ewaldSumsKernel;
+    CUfunctionFake ewaldForcesKernel;
+    CUfunctionFake pmeGridIndexKernel;
+    CUfunctionFake pmeDispersionGridIndexKernel;
+    CUfunctionFake pmeSpreadChargeKernel;
+    CUfunctionFake pmeDispersionSpreadChargeKernel;
+    CUfunctionFake pmeFinishSpreadChargeKernel;
+    CUfunctionFake pmeDispersionFinishSpreadChargeKernel;
+    CUfunctionFake pmeEvalEnergyKernel;
+    CUfunctionFake pmeEvalDispersionEnergyKernel;
+    CUfunctionFake pmeConvolutionKernel;
+    CUfunctionFake pmeDispersionConvolutionKernel;
+    CUfunctionFake pmeInterpolateForceKernel;
+    CUfunctionFake pmeInterpolateDispersionForceKernel;
     std::vector<std::pair<int, int> > exceptionAtoms;
     std::vector<std::string> paramNames;
     std::vector<double> paramValues;

@@ -34,6 +34,6 @@ CudaProgram::CudaProgram(CudaContext& context, CUmodule module) : context(contex
 }
 
 ComputeKernel CudaProgram::createKernel(const string& name) {
-    CUfunction kernel = context.getKernel(module, name.c_str());
+    CUfunctionFake kernel = context.getKernel(module, name.c_str());
     return shared_ptr<ComputeKernelImpl>(new CudaKernel(context, kernel, name));
 }

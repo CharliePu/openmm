@@ -96,7 +96,7 @@ private:
     CudaArray offsetInBucket;
     CudaArray bucketOffset;
     CudaArray buckets;
-    CUfunction shortListKernel, shortList2Kernel, computeRangeKernel, assignElementsKernel, computeBucketPositionsKernel, copyToBucketsKernel, sortBucketsKernel;
+    CUfunctionFake shortListKernel, shortList2Kernel, computeRangeKernel, assignElementsKernel, computeBucketPositionsKernel, copyToBucketsKernel, sortBucketsKernel;
     unsigned int dataLength, rangeKernelSize, positionsKernelSize, sortKernelSize;
     bool isShortList, uniform;
 };

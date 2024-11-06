@@ -47,7 +47,7 @@ public:
      * @param kernel       the kernel to be invoked
      * @param name         the name of the kernel function
      */
-    CudaKernel(CudaContext& context, CUfunction kernel, const std::string& name);
+    CudaKernel(CudaContext& context, CUfunctionFake kernel, const std::string& name);
     /**
      * Get the name of this kernel.
      */

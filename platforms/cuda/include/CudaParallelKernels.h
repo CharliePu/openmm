@@ -89,7 +89,7 @@ private:
     CudaArray contextForces;
     void* pinnedPositionBuffer;
     long long* pinnedForceBuffer;
-    CUfunction sumKernel;
+    CUfunctionFake sumKernel;
     CUevent event;
     std::vector<CUevent> peerCopyEvent;
     std::vector<CUevent> peerCopyEventLocal;
