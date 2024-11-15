@@ -264,6 +264,10 @@ extern "C" __global__ void computeNonbondedWithExclusions(
 #endif
     }
 
+#ifdef INCLUDE_ENERGY
+    energyBuffer[blockIdx.x*blockDim.x+threadIdx.x] += energy;
+#endif
+    SAVE_DERIVATIVES
 }
 
 extern "C" __global__ void computeNonbondedWithoutExclusions(
@@ -492,6 +496,11 @@ extern "C" __global__ void computeNonbondedWithoutExclusions(
         }
         pos++;
     }
+
+#ifdef INCLUDE_ENERGY
+    energyBuffer[blockIdx.x*blockDim.x+threadIdx.x] += energy;
+#endif
+    SAVE_DERIVATIVES
 }
 
 extern "C" __global__ void computeNonbondedSinglePairs(
