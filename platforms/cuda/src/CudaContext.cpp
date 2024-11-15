@@ -700,16 +700,30 @@ void CudaContext::executeKernel(CUfunctionFake kernel, void** arguments, int thr
 
     if (kernel.hasMultipleFunctions())
     {
-        auto kernels = kernel.getFunctions();
-        for (auto kernel : kernels)
+        int numStreams = kernel.getFunctions().size();
+        if (streamsForFissionKernels.size() != numStreams)
         {
-            CUresult result = cuLaunchKernel(kernel, gridSize, 1, 1, blockSize, 1, 1, sharedSize, currentStream, arguments, NULL);
+            streamsForFissionKernels.resize(numStreams);
+            while (streamsForFissionKernels.size() < numStreams)
+            {
+                CUstream stream;
+                cuStreamCreate(&stream, CU_STREAM_NON_BLOCKING);
+                streamsForFissionKernels.push_back(stream);
+            }
+        }
+
+        auto kernels = kernel.getFunctions();
+        for (int i = 0; i < numStreams; i++)
+        {
+            CUstream currentStream = streamsForFissionKernels[i];
+            CUresult result = cuLaunchKernel(kernels[i], gridSize, 1, 1, blockSize, 1, 1, sharedSize, currentStream, arguments, NULL);
             if (result != CUDA_SUCCESS) {
                 stringstream str;
                 str<<"Error invoking kernel: "<<getErrorString(result)<<" ("<<result<<")";
                 throw OpenMMException(str.str());
             }
         }
+        // std::cout<<"Executing fission kernels\n";
     }
     else
     {

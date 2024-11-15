@@ -1,6 +1,7 @@
 This is a copy of [openmm](https://github.com/openmm/openmm) with modification branches.
 
 - *kernel_fission*: performed kernel fission on non-bonded compute kernel.
+- *kernel_fission_multistream*: make fission kernels run on independent streams.
 
 
 

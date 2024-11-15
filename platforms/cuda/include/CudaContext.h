@@ -579,6 +579,7 @@ private:
     CUcontext context;
     CUdevice device;
     CUstream currentStream;
+    std::vector<CUstream> streamsForFissionKernels;
     CUfunctionFake clearBufferKernel;
     CUfunctionFake clearTwoBuffersKernel;
     CUfunctionFake clearThreeBuffersKernel;
