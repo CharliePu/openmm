@@ -41,6 +41,14 @@ public:
         return func_ptrs;
     }
 
+    bool operator==(std::nullptr_t) const {
+        if (hasMultiple) {
+            return func_ptrs.empty();
+        } else {
+            return func_ptr == nullptr;
+        }
+    }
+
 private:
     CUfunc_st* func_ptr; 
     std::vector<CUfunc_st*> func_ptrs;
