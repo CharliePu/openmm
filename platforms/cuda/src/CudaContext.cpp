@@ -700,27 +700,39 @@ void CudaContext::executeKernel(CUfunctionFake kernel, void** arguments, int thr
 
     if (kernel.hasMultipleFunctions())
     {
-        int numStreams = kernel.getFunctions().size();
-        if (streamsForFissionKernels.size() != numStreams)
+        if (!kernel.hasGraph)
         {
-            streamsForFissionKernels.resize(numStreams);
-            for (int i = 0; i < numStreams; i++)
+
+            CUgraph graph;
+            cuGraphCreate(&graph, 0);
+            std::vector<CUgraphNode> kernelNodes(kernel.getFunctions().size());
+
+            auto kernels = kernel.getFunctions();
+            for (int i = 0; i < kernel.getFunctions().size(); i++)
             {
-                cuStreamCreate(&streamsForFissionKernels[i], CU_STREAM_DEFAULT);
+                CUDA_KERNEL_NODE_PARAMS kernelNodeParams = {0};
+                kernelNodeParams.func = kernels[i];
+                kernelNodeParams.gridDimX = gridSize;
+                kernelNodeParams.gridDimY = 1;
+                kernelNodeParams.gridDimZ = 1;
+                kernelNodeParams.blockDimX = blockSize;
+                kernelNodeParams.blockDimY = 1;
+                kernelNodeParams.blockDimZ = 1;
+                kernelNodeParams.sharedMemBytes = sharedSize;
+                kernelNodeParams.kernelParams = arguments;
+                kernelNodeParams.extra = NULL;
+
+                cuGraphAddKernelNode(&kernelNodes[i], graph, NULL, 0, &kernelNodeParams);
+                // CUresult result = cuLaunchKernel(kernels[i], gridSize, 1, 1, blockSize, 1, 1, sharedSize, streamsForFissionKernels[i], arguments, NULL);
             }
+
+            cuGraphInstantiate(&kernel.graphExec, graph, NULL, NULL, 0);
+            cuGraphDestroy(graph);
+            kernel.hasGraph = true;
         }
 
-        auto kernels = kernel.getFunctions();
-        for (int i = 0; i < numStreams; i++)
-        {
-            CUresult result = cuLaunchKernel(kernels[i], gridSize, 1, 1, blockSize, 1, 1, sharedSize, streamsForFissionKernels[i], arguments, NULL);
-            if (result != CUDA_SUCCESS) {
-                stringstream str;
-                str<<"Error invoking kernel: "<<getErrorString(result)<<" ("<<result<<")";
-                throw OpenMMException(str.str());
-            }
-        }
-        // std::cout<<"Executing fission kernels\n";
+        cuGraphLaunch(kernel.graphExec, currentStream);
+        // cuStreamSynchronize(currentStream);
     }
     else
     {

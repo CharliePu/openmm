@@ -76,9 +76,25 @@ double CudaCalcForcesAndEnergyKernel::finishComputation(ContextImpl& context, bo
     cu.getBondedUtilities().computeInteractions(groups);
     cu.getNonbondedUtilities().computeInteractions(groups, includeForces, includeEnergy);
     double sum = 0.0;
-    for (auto computation : cu.getPostComputations())
-        sum += computation->computeForceAndEnergy(includeForces, includeEnergy, groups);
-    cu.getIntegrationUtilities().distributeForcesFromVirtualSites();
+
+    static CUgraphExec instance;
+    static bool first = true;
+    if (first) {
+        static CUgraph graph;
+        first = false;
+        cuStreamBeginCapture(cu.getCurrentStream(), CUstreamCaptureMode_enum::CU_STREAM_CAPTURE_MODE_GLOBAL);
+
+        for (auto computation : cu.getPostComputations())
+            sum += computation->computeForceAndEnergy(includeForces, includeEnergy, groups);
+        cu.getIntegrationUtilities().distributeForcesFromVirtualSites();
+
+        cuStreamEndCapture(cu.getCurrentStream(), &graph);
+        cuGraphInstantiate(&instance, graph, NULL, NULL, 0);
+        cuGraphDestroy(graph);
+    }
+
+    cuGraphLaunch(instance, cu.getCurrentStream());
+    
     if (includeEnergy)
         sum += cu.reduceEnergy();
     if (!cu.getForcesValid())

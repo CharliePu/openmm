@@ -2,6 +2,8 @@
 #define CUDA_FUNCTION_FAKE_H
 
 #include <cuda.h>
+#include <cuda_runtime.h>
+#include <cuda_runtime_api.h>
 #include <vector>
 
 
@@ -48,6 +50,9 @@ public:
             return func_ptr == nullptr;
         }
     }
+
+    CUgraphExec graphExec;
+    bool hasGraph = false;
 
 private:
     CUfunc_st* func_ptr; 
