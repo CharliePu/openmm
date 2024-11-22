@@ -704,19 +704,16 @@ void CudaContext::executeKernel(CUfunctionFake kernel, void** arguments, int thr
         if (streamsForFissionKernels.size() != numStreams)
         {
             streamsForFissionKernels.resize(numStreams);
-            while (streamsForFissionKernels.size() < numStreams)
+            for (int i = 0; i < numStreams; i++)
             {
-                CUstream stream;
-                cuStreamCreate(&stream, CU_STREAM_NON_BLOCKING);
-                streamsForFissionKernels.push_back(stream);
+                cuStreamCreate(&streamsForFissionKernels[i], CU_STREAM_DEFAULT);
             }
         }
 
         auto kernels = kernel.getFunctions();
         for (int i = 0; i < numStreams; i++)
         {
-            CUstream currentStream = streamsForFissionKernels[i];
-            CUresult result = cuLaunchKernel(kernels[i], gridSize, 1, 1, blockSize, 1, 1, sharedSize, currentStream, arguments, NULL);
+            CUresult result = cuLaunchKernel(kernels[i], gridSize, 1, 1, blockSize, 1, 1, sharedSize, streamsForFissionKernels[i], arguments, NULL);
             if (result != CUDA_SUCCESS) {
                 stringstream str;
                 str<<"Error invoking kernel: "<<getErrorString(result)<<" ("<<result<<")";
